@@ -1,0 +1,41 @@
+# Ignorer les fichiers générés par Keil uVision
+*.dep
+*.lst
+*.map
+*.crf
+*.plg
+*.htm
+*.log
+
+# Ignorer les fichiers d'output Keil
+*.axf
+*.o
+*.d
+*.bak
+
+# Ignorer les fichiers de build et objets
+free_RTOS_TP4/Demo/ARM7_STM32F103_Keil_RVDS/Objects/
+free_RTOS_TP4/Demo/ARM7_STM32F103_Keil_RVDS/Listings/
+
+# Ignorer les fichiers de configuration utilisateur de Keil
+*.uvoptx
+*.uvguix.*
+
+# Ignorer les fichiers de simulation et de debug
+*.sdf
+*.suo
+*.opendb
+*.user
+
+# Ignorer les fichiers de cache
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.swn
+
+# Ignorer le dossier de build (si utilisé)
+build/
+out/
+Debug/
+Release/
