@@ -10,6 +10,8 @@
 #define BITS_PER_LED 24
 #define TOTAL_BITS (NUM_LEDS * BITS_PER_LED)
 
+
+
 // Tableau compact 1 bit par LED (8 octets suffisent pour 60 LEDs)
 uint8_t ledStatus[8] = {0};
 
@@ -83,6 +85,8 @@ void start_ledTransmission(void) {
 
 void init_gpio(void)
 {
+ init_GPIOx(GPIOA,1, GPIO_MODE_OUTPUT_PP_50MHz );  
+ init_GPIOx(GPIOA,2, GPIO_MODE_OUTPUT_PP_50MHz );  
  init_GPIOx(GPIOA,4, GPIO_MODE_OUTPUT_PP_50MHz );  
  init_GPIOx(GPIOA,5, GPIO_MODE_OUTPUT_PP_50MHz );  
  init_GPIOx(GPIOA,6, GPIO_MODE_OUTPUT_PP_50MHz );  
@@ -102,6 +106,12 @@ int main(void) {
     static uint32_t oscille_plantage = 1 << 13;
     prvSetupHardware();
     
+	
+		xTaskCreate(taskScrutBoutons, "ScrutBoutons", 128, NULL, 4, NULL);
+    xTaskCreate(taskGestionCasiers, "GestionCasiers", 128, NULL, 2, NULL);
+    xTaskCreate(taskMiseAJourLEDs, "MiseAJourLEDs", 128, NULL, 2, NULL);
+    xTaskCreate(taskGestionReedSwitches, "GestionReed", 128, NULL, 2, NULL);
+	
     // Mise à jour du buffer et démarrage de la transmission
     update_ledBuffer();
     start_ledTransmission();
