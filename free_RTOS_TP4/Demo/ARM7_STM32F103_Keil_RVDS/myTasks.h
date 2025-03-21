@@ -5,28 +5,35 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-void vInit_myTasks( UBaseType_t uxPriority );
+void vInit_myTasks(UBaseType_t uxPriority);
 
+// Dï¿½finition des broches des boutons (ï¿½ ajuster selon ton hardware)
+#define BP_DEMANDE_TEST GPIO_Pin_2  // PA2
+#define BP_DEMANDE_APPRO GPIO_Pin_1 // PA1
 
-// Définition des broches des boutons (à ajuster selon ton hardware)
-#define BP_DEMANDE_TEST  GPIO_Pin_2   // PA2
-#define BP_DEMANDE_APPRO GPIO_Pin_1   // PA1
-
-// Définition des couleurs LED
-#define BLEU  0x0000FF
+// Dï¿½finition des couleurs LED
+#define BLEU 0x0000FF
 #define ROUGE 0xFF0000
-#define VERT  0x00FF00
+#define VERT 0x00FF00
 
-typedef struct {
-    GPIO_TypeDef* port;
+extern uint8_t ledStatus[8]; // Statut des LEDs (tableau de 8 octets pour 60 LEDs)
+extern TaskHandle_t xTaskGestionCasiersHandle;
+
+void update_ledBuffer(void);
+void start_ledTransmission(void);
+void taskSimulateButtons(void *pvParameters);
+
+typedef struct
+{
+    GPIO_TypeDef *port;
     uint16_t pin;
     TickType_t dureeOn;
     TickType_t dureeOff;
 } PARAM_CLIGNOTEUR;
 
-
-// Définition des modes
-typedef enum {
+// Dï¿½finition des modes
+typedef enum
+{
     MODE_EFFACE,
     MODE_TEST,
     MODE_APPRO
@@ -34,18 +41,17 @@ typedef enum {
 
 // Variables globales
 extern volatile ModeSysteme modeActuel;
-extern unsigned char etat_reed[60]; // Tableau d'état des capteurs REED
-extern volatile int num_case_resistance; // Numéro du casier à tester
+extern unsigned char etat_reed[60];      // Tableau d'ï¿½tat des capteurs REED
+extern volatile int num_case_resistance; // Numï¿½ro du casier ï¿½ tester
 
-// Déclarations des tâches
+// Dï¿½clarations des tï¿½ches
 void taskScrutBoutons(void *pvParameters);
 void taskGestionCasiers(void *pvParameters);
 void taskMiseAJourLEDs(void *pvParameters);
 void taskGestionReedSwitches(void *pvParameters);
 void allumer_led_casier(int casier, uint32_t couleur);
 
-
-//extern void init_GPIOx(GPIO_TypeDef *GPIOx, uint8_t num_bit, uint8_t quartet);
+// extern void init_GPIOx(GPIO_TypeDef *GPIOx, uint8_t num_bit, uint8_t quartet);
 
 void init_GPIOx(GPIO_TypeDef *GPIOx, uint8_t num_bit, uint8_t quartet);
 
