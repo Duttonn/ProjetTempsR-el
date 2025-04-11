@@ -98,8 +98,8 @@ void start_ledTransmission(void)
 
 void init_gpio(void)
 {	
-	init_GPIOx(GPIOB, 0, GPIO_MODE_INPUT_PULLUP); 
-    //init_GPIOx(GPIOB, 0, GPIO_MODE_OUTPUT_PP_50MHz);
+	//init_GPIOx(GPIOB, 0, GPIO_MODE_INPUT_PULLUP); 
+    init_GPIOx(GPIOB, 0, GPIO_MODE_OUTPUT_PP_50MHz);
 
     //init_GPIOx(GPIOA, 2, GPIO_MODE_INPUT_PULLUP); 
 	

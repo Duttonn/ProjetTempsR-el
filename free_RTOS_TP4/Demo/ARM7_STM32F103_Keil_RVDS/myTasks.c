@@ -55,7 +55,7 @@ void taskScrutBoutons(void *pvParameters)
     while (1)
     {
         uint8_t state_test = (GPIOA->IDR & (1 << 2)) ? 1 : 0;
-        uint8_t state_appro = (GPIOA->IDR & (1 << 1)) ? 1 : 0;
+        uint8_t state_appro = (GPIOB->IDR & (1 << 0)) ? 1 : 0;
 
         if (state_test == 1 && last_state_test == 0)
         {
