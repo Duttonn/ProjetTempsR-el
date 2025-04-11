@@ -10,22 +10,6 @@
 #include "myTasks.h"
 #include "def_type_gpio.h"
 
-
-
-
-// Variables globales pour ADC
-volatile uint16_t adc_value = 0;
-volatile uint8_t adc_ready = 0;
-extern uint8_t ledStatus[60];
-volatile uint8_t casier_debug = 255;  // Variable globale pour le Logic Analyzer
-volatile uint8_t casier = 255;
-volatile int i;
-
-
-#define ADC_CHANNEL 1  // Utiliser directement 0 pour PA0
-#define PIN_CHOIX_TALON 5 // GPIO PB5 pour activer RES2
-
-
 volatile ModeSysteme modeActuel = MODE_EFFACE;
 unsigned char etat_reed[60] = {0};
 volatile int num_case_resistance = 0;
@@ -76,13 +60,11 @@ void taskScrutBoutons(void *pvParameters)
         if (state_test == 1 && last_state_test == 0)
         {
             printf("🔹 Appui sur BP_DEMANDE_TEST, envoi de notification...\n");
-            //modeActuel = MODE_TEST;
             xTaskNotify(xTaskGestionCasiersHandle, MODE_TEST, eSetValueWithOverwrite);
         }
         else if (state_appro == 1 && last_state_appro == 0)
         {
             printf("🔹 Appui sur BP_DEMANDE_APPRO, envoi de notification...\n");
-            //modeActuel = MODE_APPRO;
             xTaskNotify(xTaskGestionCasiersHandle, MODE_APPRO, eSetValueWithOverwrite);
         }
 
@@ -193,35 +175,6 @@ void taskGestionReedSwitches(void *pvParameters)
     }
 }
 
-const uint16_t SEUILS1[] = {
-    3850,3804,3752,3691,3618,3532,3432,3320,3183,3033,
-    2875,2695,2504,2322,2143,1959,1772,1583,1401,1231,
-    1065,913,785,664,559,476,406,345,291,244,
-    203
-};
-
-const uint16_t SEUILS2[] = {
-    3898,3859,3810,3752,3686,3605,3511,3414,3307,3185,
-    3048,2893,2723,2545,2346,2141,1946,1741,1542,1369,
-    1214,1065,927,797,681,580,487,406,341,283,
-    234
-};
-
-const uint16_t CASIERS[] = {
-    0,1,2,3,4,5,6,7,8,9,
-    10,11,12,13,14,15,16,17,18,19,
-    20,21,22,23,24,25,26,27,28,29,
-    30,31,32,33,34,35,36,37,38,39,
-    40,41,42,43,44,45,46,47,48,49,
-    50,51,52,53,54,55,56,57,58,59,
-};
-
-void Set_Transistor(uint8_t state);
-void Start_ADC_Conversion(void);
-void update_ledBuffer(void);
-void start_ledTransmission(void);
-
-	
 void vClignoteurTask(void *pvParameters)
 {
     PARAM_CLIGNOTEUR *param = (PARAM_CLIGNOTEUR *)pvParameters;
@@ -249,130 +202,3 @@ void vInit_myTasks(UBaseType_t uxPriority)
     xTaskCreate(vClignoteurTask, "ClignoteurB", configMINIMAL_STACK_SIZE, &ParamClignoteurB, uxPriority, NULL);
     xTaskCreate(vClignoteurTask, "ClignoteurC", configMINIMAL_STACK_SIZE, &ParamClignoteurC, uxPriority, NULL);
 }
-
-
-// === Activer/Désactiver RES2 via PB5 ===
-void Set_Transistor(uint8_t state) {
-    if (state)
-        GPIOB->BSRR = (1 << PIN_CHOIX_TALON); // Activer RES2
-    else
-        GPIOB->BSRR = (1 << (PIN_CHOIX_TALON + 16)); // Désactiver RES2
-}
-
-// === Démarrer la conversion ADC ===
-void Start_ADC_Conversion(void) {
-    ADC1->CR2 |= (1 << 22);  // Déclencher la conversion (SWSTART)
-}
-
-
-
-
-   // NVIC_EnableIRQ((IRQn_Type)18);
-
-void Init_ADC(void) {
-    int i;  
-    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_ADC1EN;
-
-    // PA1 en entr�e analogique
-    GPIOA->CRL &= ~(0xF << (ADC_CHANNEL * 4));  // Remise � 0 du champ pour PA1
-
-    ADC1->CR1 = ADC_CR1_EOCIE; // Interruption fin de conversion
-
-    ADC1->CR2 |= ADC_CR2_ADON; // 1�re activation
-    for (i = 0; i < 1000; i++); // Petit d�lai
-    ADC1->CR2 |= ADC_CR2_ADON; // 2�me activation
-
-    ADC1->SQR3 = ADC_CHANNEL; // Canal 1 pour PA1
-    NVIC_EnableIRQ(ADC1_2_IRQn);
-}
-
-
-
-void ADC1_2_IRQHandler(void) {
-    if (ADC1->SR & ADC_SR_EOC) {
-        adc_value = ADC1->DR;             // 1. Lire la donn�e
-        ADC1->SR &= ~ADC_SR_EOC;          // 2. Effacer le flag
-        adc_ready = 1;                    // 3. Signaler � la t�che
-    }
-}
-
-
-void vTask_Mesure_Resistance(void *pvParameters) {
-    uint16_t valeur = 0;
-    int i;
-
-    while (1) {
-        if (modeActuel != MODE_TEST) {
-            vTaskDelay(pdMS_TO_TICKS(500)); // Attente passive quand pas en mode mesure
-            continue;
-        }
-        Set_Transistor(0);
-        Start_ADC_Conversion();
-        while (!adc_ready);
-        //adc_ready = 0;
-        valeur = adc_value;
-
-        // === Si pas de mesure valable ===
-        if (valeur == 0) {
-            casier = 255;
-            casier_debug = casier;
-
-            // �teindre toutes les LEDs
-            memset(ledStatus, 0, sizeof(ledStatus));
-
-
-            //update_ledBuffer();
-            //start_ledTransmission();
-            vTaskDelay(pdMS_TO_TICKS(1000));
-            continue;
-        }
-
-        // === Choix de la r�sistance parall�le si besoin ===
-        if (valeur > 3850) {
-            Set_Transistor(1);
-            Start_ADC_Conversion();
-            while (!adc_ready);
-            adc_ready = 0;
-            valeur = adc_value;
-
-            for (i = 0; i < sizeof(SEUILS2)/sizeof(uint16_t) - 1; i++) {
-                if (valeur <= SEUILS2[i] && valeur >= SEUILS2[i + 1]) {
-                    casier = CASIERS[i];
-                    break;
-                }
-            }
-
-            Set_Transistor(0);
-        } else {
-            for (i = 0; i < sizeof(SEUILS1)/sizeof(uint16_t) - 1; i++) {
-                if (valeur <= SEUILS1[i] && valeur >= SEUILS1[i + 1]) {
-                    casier = CASIERS[i + 30];
-                    break;
-                }
-            }
-        }
-
-        casier_debug = casier;
-
-        // === Affichage sur LEDs : tableau de 60 bits ===
-        memset(ledStatus, 0, sizeof(ledStatus));
-
-
-
-
-
-        if (casier < 60) {
-            ledStatus[casier] = 1;  // Allume seulement ce casier
-        }
-
-        update_ledBuffer();
-        start_ledTransmission();
-
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}
-
-
-
-
-
