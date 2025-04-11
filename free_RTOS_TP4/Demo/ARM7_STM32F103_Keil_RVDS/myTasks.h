@@ -4,8 +4,14 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+void vInit_myTasks( UBaseType_t uxPriority );
+void Init_ADC(void);
+void vTask_Mesure_Resistance(void *pvParameters);
+void Set_Transistor(uint8_t state);
+void Start_ADC_Conversion(void);
 
-void vInit_myTasks(UBaseType_t uxPriority);
+void ADC1_2_IRQHandler(void);
+
 
 // D�finition des broches des boutons (� ajuster selon ton hardware)
 #define BP_DEMANDE_TEST GPIO_Pin_2  // PA2

@@ -55,12 +55,14 @@ void TIM2_IRQHandler(void)
         else
         {
             TIM2->CCR1 = 0; // RESET des LEDs (40 cycles bas)
-            if (++currentBit > TOTAL_BITS + 40)
-            {
-                currentBit = 0;
-                sending = 0;
-                TIM2->CR1 &= ~TIM_CR1_CEN; // Désactiver le Timer
-            }
+            if (++currentBit >= TOTAL_BITS + 40) { // 40 cycles pour un reset correct
+    currentBit = 0; 
+    sending = 0;
+		TIM2->DIER &= ~TIM_DIER_UIE;  // D�sactiver l'interruption Update
+    TIM2->CR1 &= ~TIM_CR1_CEN;    // Stopper TIM2
+
+}
+
         }
     }
 }
@@ -109,6 +111,7 @@ void init_gpio(void)
     init_GPIOx(GPIOA, 4, GPIO_MODE_OUTPUT_PP_50MHz);
     init_GPIOx(GPIOA, 5, GPIO_MODE_OUTPUT_PP_50MHz);
     init_GPIOx(GPIOA, 6, GPIO_MODE_OUTPUT_PP_50MHz);
+    init_GPIOx(GPIOB,5, GPIO_MODE_OUTPUT_PP_50MHz );	
     init_GPIOx(GPIOA, 7, GPIO_MODE_OUTPUT_PP_50MHz);
     init_GPIOx(GPIOB, 10, GPIO_MODE_OUTPUT_PP_50MHz);
     init_GPIOx(GPIOB, 11, GPIO_MODE_OUTPUT_PP_50MHz);
@@ -132,12 +135,14 @@ int main(void)
     xTaskCreate(taskMiseAJourLEDs, "MiseAJourLEDs", 128, NULL, 2, NULL);
     xTaskCreate(taskGestionReedSwitches, "GestionReed", 128, NULL, 2, NULL);
     xTaskCreate(taskSimulateButtons, "SimButtons", 128, NULL, 3, NULL);
-
+    Init_ADC();
     // Mise � jour du buffer et d�marrage de la transmission
     // update_ledBuffer();
     // start_ledTransmission();
 
     vInit_myTasks(mainLED_TASK_PRIORITY);
+	  //xTaskCreate(vTask_Mesure_Resistance, "MesureRes", configMINIMAL_STACK_SIZE, NULL, mainLED_TASK_PRIORITY, NULL);
+
     vTaskStartScheduler();
 
     for (;;)
