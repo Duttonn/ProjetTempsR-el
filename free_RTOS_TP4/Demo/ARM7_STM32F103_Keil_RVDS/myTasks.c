@@ -84,20 +84,20 @@ void taskSimulateButtons(void *pvParameters)
         // Simuler un appui sur BP_DEMANDE_APPRO (Passage en MODE_APPRO)
         printf("🔹 Simulation: Appui sur BP_DEMANDE_APPRO\n");
         GPIOB->BSRR = (1 << 0); // Simuler bouton PB0 pressé (LOW)
-        vTaskDelay(pdMS_TO_TICKS(300));
+        vTaskDelay(pdMS_TO_TICKS(150));
         GPIOB->BSRR = (1 << 16); // Relâcher bouton PB0 (HIGH)
 
         // Attendre 5 secondes en MODE_APPRO
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(500));
 
         // Simuler un appui sur BP_DEMANDE_TEST (Passage en MODE_TEST)
         printf("🔹 Simulation: Appui sur BP_DEMANDE_TEST\n");
         GPIOA->BSRR = (1 << 2); // Simuler bouton PA2 pressé (LOW)
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(150));
         GPIOA->BSRR = (1 << 18); // Relâcher bouton PA2 (HIGH)
 
         // Attendre 5 secondes en MODE_TEST
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 

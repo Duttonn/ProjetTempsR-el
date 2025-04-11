@@ -5,13 +5,15 @@
 #include "def_type_gpio.h"
 #include "myTasks.h"
 
+#define GPIO_MODE_INPUT_PULLUP 0x8
+
 #define mainLED_TASK_PRIORITY (tskIDLE_PRIORITY + 2)
 #define NUM_LEDS 60
 #define BITS_PER_LED 24
 #define TOTAL_BITS (NUM_LEDS * BITS_PER_LED)
 
 // Tableau compact 1 bit par LED (8 octets suffisent pour 60 LEDs)
-uint8_t ledStatus[8] = {0};
+uint8_t ledStatus[60] = {0};
 
 // Buffer PWM pour envoyer les bits aux WS2812B
 uint8_t pwmBuffer[TOTAL_BITS];
@@ -68,9 +70,8 @@ void update_ledBuffer(void)
     int i, j;
     for (i = 0; i < NUM_LEDS; i++)
     {
-        uint8_t bitPos = i % 8;
-        uint8_t byteIndex = i / 8;
-        uint8_t ledValue = (ledStatus[byteIndex] >> bitPos) & 1;
+        
+        uint8_t ledValue = ledStatus[i];
 
         for (j = 0; j < BITS_PER_LED; j++)
         {
@@ -96,7 +97,13 @@ void start_ledTransmission(void)
 }
 
 void init_gpio(void)
-{
+{	
+	init_GPIOx(GPIOB, 0, GPIO_MODE_INPUT_PULLUP); 
+    //init_GPIOx(GPIOB, 0, GPIO_MODE_OUTPUT_PP_50MHz);
+
+    //init_GPIOx(GPIOA, 2, GPIO_MODE_INPUT_PULLUP); 
+	
+	
     init_GPIOx(GPIOA, 1, GPIO_MODE_OUTPUT_PP_50MHz);
     init_GPIOx(GPIOA, 2, GPIO_MODE_OUTPUT_PP_50MHz);
     init_GPIOx(GPIOA, 4, GPIO_MODE_OUTPUT_PP_50MHz);

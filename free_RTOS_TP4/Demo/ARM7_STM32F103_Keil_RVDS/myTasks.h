@@ -16,7 +16,7 @@ void vInit_myTasks(UBaseType_t uxPriority);
 #define ROUGE 0xFF0000
 #define VERT 0x00FF00
 
-extern uint8_t ledStatus[8]; // Statut des LEDs (tableau de 8 octets pour 60 LEDs)
+extern uint8_t ledStatus[60]; // Statut des LEDs (tableau de 8 octets pour 60 LEDs)
 extern TaskHandle_t xTaskGestionCasiersHandle;
 
 void update_ledBuffer(void);
